@@ -1,0 +1,658 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MINSA · Solicitud de Abandonos · DIRIS</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --minsa-cyan:#26abd3;
+      --minsa-cyan-dark:#1a7a99;
+      --minsa-bg-light:#D4E9F0;
+      --white:#ffffff;
+      --muted:#6b7b80;
+      --radius:10px;
+      --shadow:0 8px 22px rgba(10,30,40,0.04);
+      --grid:rgba(20,40,50,0.04);
+    }
+    html,body{
+      margin:0;
+      height:100%;
+      font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,"Helvetica Neue",Arial;
+      font-size:16px;
+      color:var(--minsa-cyan-dark);
+      background:linear-gradient(180deg,#f7fbfc,#fff);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .topbar{
+      height:64px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:0 20px;
+      color:var(--white);
+      background:linear-gradient(90deg,var(--minsa-cyan) 0%, #3dbde6 100%);
+      box-shadow:0 2px 6px rgba(38,171,211,.15);
+    }
+    .brand{
+      font-weight:700;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+
+    .wrap{
+      display:flex;
+      gap:18px;
+      padding:18px;
+      height:calc(100vh - 64px);
+      box-sizing:border-box;
+    }
+
+    .sidebar{
+      width:300px;
+      min-width:240px;
+      padding:14px;
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(212,233,240,.96), rgba(212,233,240,.88));
+      box-shadow:0 6px 18px rgba(10,30,40,.04);
+      overflow:auto;
+    }
+    .section-title{
+      font-weight:700;
+      margin:4px 0 10px 0;
+      font-size:15px;
+    }
+
+    .stat-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:8px;
+      margin-bottom:14px;
+    }
+    .stat-card{
+      padding:10px 12px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.9);
+      box-shadow:0 3px 10px rgba(10,30,40,0.04);
+    }
+    .stat-label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:2px;
+    }
+    .stat-value{
+      font-size:18px;
+      font-weight:700;
+      color:var(--minsa-cyan-dark);
+    }
+    .stat-chip{
+      font-size:12px;
+      display:inline-block;
+      margin-top:4px;
+      padding:2px 8px;
+      border-radius:999px;
+      background:var(--minsa-bg-light);
+      color:var(--minsa-cyan-dark);
+    }
+
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      overflow:hidden;
+    }
+    .row{
+      display:flex;
+      gap:16px;
+      align-items:stretch;
+    }
+
+    .card{
+      background:rgba(255,255,255,0.88);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+      flex:1;
+      min-height:120px;
+      box-sizing:border-box;
+    }
+    .chart-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .card h3{
+      margin:0;
+      font-size:18px;
+    }
+    .details{
+      padding:10px !important;
+      font-size:13px;
+    }
+
+    .btn-secondary{
+      background:#fff;
+      color:#3b5560;
+      border:1px solid #e6eef1;
+      padding:6px 8px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:13px;
+    }
+
+    .text-muted{color:var(--muted);}
+
+    .pill-group{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .table-scroll{
+      max-height:260px;
+      overflow:auto;
+      border-top:1px solid #edf3f6;
+      margin-top:8px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    th,td{
+      padding:6px 6px;
+      text-align:right;
+      border-bottom:1px solid #edf3f6;
+      white-space:nowrap;
+    }
+    th:first-child, td:first-child{text-align:left;}
+    tr.highlight{
+      background:linear-gradient(90deg, rgba(38,171,211,0.08), rgba(38,171,211,0.02));
+      border-left:4px solid var(--minsa-cyan);
+    }
+
+    @media (max-width:1000px){
+      .wrap{flex-direction:column;padding:12px;height:auto;}
+      .sidebar{width:100%;order:2}
+      .main{order:1}
+      .row{flex-direction:column;}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Dashboard Solicitud de Abandonos (DIRIS)</div>
+    <div style="flex:1"></div>
+    <div style="opacity:.95;font-size:14px">SDI - 2020–2025</div>
+  </div>
+
+  <div class="wrap">
+    <aside class="sidebar">
+      <div class="section-title">Resumen nacional 2020–2025</div>
+      <div class="stat-grid" id="summaryCards"></div>
+
+      <div class="section-title">Ayuda de lectura</div>
+      <div class="text-muted" style="font-size:13px;line-height:1.45;">
+        • El gráfico principal muestra el <strong>Total de abandonos 2020–2025</strong> por DIRIS.<br>
+        • LIMA CENTRO se resalta visualmente y se muestra en la parte superior.<br>
+        • En la parte inferior se incluye la tendencia anual país: PVV que iniciaron TAR vs PVV que abandonaron.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="row">
+        <section class="card" style="flex:2.2;">
+          <div class="chart-title">
+            <h3 id="mainTitle">Abandonos acumulados 2020–2025 por DIRIS</h3>
+            <div class="pill-group">
+              <select id="chartType" class="btn-secondary">
+                <option value="horizontalBar">Barras horizontales</option>
+                <option value="bar">Barras verticales</option>
+                <option value="line">Línea</option>
+              </select>
+            </div>
+          </div>
+          <div id="chartBox" style="position:relative;">
+            <canvas id="mainChart"></canvas>
+          </div>
+        </section>
+
+        <section class="card details" style="flex:1;">
+          <h4 style="margin:0 0 6px 0;font-size:15px">Detalle por DIRIS seleccionada</h4>
+          <div id="detailBox" class="text-muted">
+            Selecciona una barra del gráfico para ver la distribución por año (2020–2025).
+          </div>
+        </section>
+      </div>
+
+      <div class="row">
+        <section class="card" style="flex:1.5;">
+          <div class="chart-title">
+            <h3 style="margin:0">Tendencia anual país · PVV Iniciaron TAR vs Abandonaron</h3>
+          </div>
+          <div style="position:relative;height:320px;">
+            <canvas id="trendChart"></canvas>
+          </div>
+        </section>
+
+        <section class="card" style="flex:1;">
+          <div class="chart-title">
+            <h3 style="margin:0">Tabla por DIRIS y año</h3>
+          </div>
+          <div class="table-scroll">
+            <table id="regionTable">
+              <thead>
+                <tr>
+                  <th>DIRIS</th>
+                  <th>2020</th>
+                  <th>2021</th>
+                  <th>2022</th>
+                  <th>2023</th>
+                  <th>2024</th>
+                  <th>2025</th>
+                  <th>Total 20–25</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    /* === Datos extraídos de 'Solicitud de Abandonos.xlsx' (hoja DIRIS) === */
+    const DASH_DATA = {
+      tarRow: {
+        DIRIS: "PVV iniciaron tar",
+        y2020: 6949,
+        y2021: 9876,
+        y2022: 12569,
+        y2023: 10440,
+        y2024: 10565,
+        y2025: 8259,
+        Total: 58658
+      },
+      abanRow: {
+        DIRIS: "PVV Abandonaron",
+        y2020: 1131,
+        y2021: 1478,
+        y2022: 1692,
+        y2023: 1198,
+        y2024: 748,
+        y2025: 194,
+        Total: 6441
+      },
+      regions: [
+        {"DIRIS":"LIMA CENTRO","y2020":283,"y2021":339,"y2022":320,"y2023":149,"y2024":90,"y2025":21,"Total":1202},
+        {"DIRIS":"LIMA SUR","y2020":108,"y2021":156,"y2022":223,"y2023":110,"y2024":66,"y2025":17,"Total":680},
+        {"DIRIS":"LIMA NORTE","y2020":119,"y2021":152,"y2022":157,"y2023":113,"y2024":71,"y2025":15,"Total":627},
+        {"DIRIS":"LORETO","y2020":93,"y2021":116,"y2022":147,"y2023":130,"y2024":60,"y2025":23,"Total":569},
+        {"DIRIS":"AMAZONAS","y2020":37,"y2021":52,"y2022":148,"y2023":126,"y2024":108,"y2025":37,"Total":508},
+        {"DIRIS":"UCAYALI","y2020":73,"y2021":98,"y2022":100,"y2023":95,"y2024":42,"y2025":18,"Total":426},
+        {"DIRIS":"CALLAO","y2020":104,"y2021":107,"y2022":73,"y2023":56,"y2024":35,"y2025":6,"Total":381},
+        {"DIRIS":"LIMA ESTE","y2020":36,"y2021":49,"y2022":82,"y2023":50,"y2024":54,"y2025":13,"Total":284},
+        {"DIRIS":"LAMBAYEQUE","y2020":42,"y2021":71,"y2022":43,"y2023":50,"y2024":31,"y2025":7,"Total":244},
+        {"DIRIS":"SAN MARTIN","y2020":16,"y2021":35,"y2022":50,"y2023":47,"y2024":36,"y2025":6,"Total":190},
+        {"DIRIS":"LA LIBERTAD","y2020":36,"y2021":48,"y2022":50,"y2023":22,"y2024":26,"y2025":7,"Total":189},
+        {"DIRIS":"LIMA","y2020":23,"y2021":26,"y2022":44,"y2023":36,"y2024":23,"y2025":5,"Total":157},
+        {"DIRIS":"ICA","y2020":22,"y2021":37,"y2022":38,"y2023":29,"y2024":11,"y2025":0,"Total":137},
+        {"DIRIS":"PIURA","y2020":26,"y2021":36,"y2022":19,"y2023":39,"y2024":14,"y2025":0,"Total":134},
+        {"DIRIS":"JUNIN","y2020":14,"y2021":23,"y2022":27,"y2023":22,"y2024":18,"y2025":5,"Total":109},
+        {"DIRIS":"AREQUIPA","y2020":14,"y2021":22,"y2022":29,"y2023":19,"y2024":11,"y2025":2,"Total":97},
+        {"DIRIS":"ANCASH","y2020":14,"y2021":26,"y2022":25,"y2023":22,"y2024":5,"y2025":2,"Total":94},
+        {"DIRIS":"CUSCO","y2020":12,"y2021":21,"y2022":21,"y2023":22,"y2024":4,"y2025":2,"Total":82},
+        {"DIRIS":"TUMBES","y2020":10,"y2021":12,"y2022":33,"y2023":14,"y2024":8,"y2025":5,"Total":82},
+        {"DIRIS":"MADRE DE DIOS","y2020":16,"y2021":13,"y2022":15,"y2023":7,"y2024":5,"y2025":0,"Total":56},
+        {"DIRIS":"CAJAMARCA","y2020":6,"y2021":6,"y2022":10,"y2023":10,"y2024":7,"y2025":1,"Total":40},
+        {"DIRIS":"HUANUCO","y2020":5,"y2021":7,"y2022":13,"y2023":9,"y2024":4,"y2025":1,"Total":39},
+        {"DIRIS":"PUNO","y2020":9,"y2021":11,"y2022":7,"y2023":4,"y2024":6,"y2025":0,"Total":37},
+        {"DIRIS":"PASCO","y2020":5,"y2021":3,"y2022":6,"y2023":5,"y2024":9,"y2025":0,"Total":28},
+        {"DIRIS":"AYACUCHO","y2020":2,"y2021":4,"y2022":2,"y2023":3,"y2024":3,"y2025":0,"Total":14},
+        {"DIRIS":"TACNA","y2020":2,"y2021":2,"y2022":5,"y2023":5,"y2024":0,"y2025":0,"Total":14},
+        {"DIRIS":"MOQUEGUA","y2020":3,"y2021":3,"y2022":2,"y2023":2,"y2024":1,"y2025":1,"Total":12},
+        {"DIRIS":"APURIMAC","y2020":1,"y2021":2,"y2022":1,"y2023":2,"y2024":0,"y2025":0,"Total":6},
+        {"DIRIS":"HUANCAVELICA","y2020":0,"y2021":1,"y2022":2,"y2023":0,"y2024":0,"y2025":0,"Total":3},
+        {"DIRIS":"Tasa de abandono(%)","y2020":0,"y2021":0,"y2022":0,"y2023":0,"y2024":0,"y2025":0,"Total":0}
+      ]
+    };
+
+    const pal = { main:'#26abd3', dark:'#1a7a99', grid:'rgba(20,40,50,0.04)' };
+
+    function shadeColor(hex, percent) {
+      const f = parseInt(hex.slice(1),16), t = percent<0?0:255, p=Math.abs(percent)/100;
+      const R = Math.round((t-(f>>16))*p)+(f>>16);
+      const G = Math.round((t-((f>>8)&255))*p)+((f>>8)&255);
+      const B = Math.round((t-(f&255))*p)+(f&255);
+      return "#"+(0x10000+(R<<16)+(G<<8)+B).toString(16).slice(1);
+    }
+    function fmt(n){ return n.toLocaleString('es-PE'); }
+
+    const TAR = DASH_DATA.tarRow;
+    const ABAN = DASH_DATA.abanRow;
+    const regionsAll = DASH_DATA.regions.filter(r => r.DIRIS !== 'Tasa de abandono(%)');
+    const abandonoGlobal = ABAN.Total;
+    const tarGlobal = TAR.Total;
+    const tasaGlobal = tarGlobal ? (abandonoGlobal / tarGlobal * 100) : 0;
+
+    let chartType = 'horizontalBar';
+    let mainChart = null;
+    let trendChart = null;
+    let selectedDiris = null;
+
+    const valueLabelsPlugin = {
+      id:'valueLabels',
+      afterDatasetsDraw(chart){
+        const {ctx} = chart;
+        const indexAxis = chart.options.indexAxis || 'x';
+        const ds = chart.data.datasets[0];
+        const meta = chart.getDatasetMeta(0);
+        if(!meta || !meta.data) return;
+        ctx.save();
+        ctx.font = 'bold 11px Inter, Arial';
+        ctx.fillStyle = pal.dark;
+
+        meta.data.forEach((bar,i)=>{
+          const val = ds.data[i];
+          if(val == null) return;
+          const p = bar.getProps(['x','y','base','width','height'], true);
+          const text = String(val);
+          if(indexAxis === 'y'){ // horizontal
+            const x1 = Math.max(p.base, p.x);
+            const y = p.y;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x1 + 8, y);
+          }else{
+            const yTop = Math.min(p.base, p.y);
+            const x = p.x;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(text, x, yTop - 4);
+          }
+        });
+        ctx.restore();
+      }
+    };
+
+    function buildSummary(){
+      const box = document.getElementById('summaryCards');
+      box.innerHTML = '';
+      const cards = [
+        {label:'PVV iniciaron TAR (2020–2025)', value:tarGlobal},
+        {label:'PVV abandonaron (2020–2025)', value:abandonoGlobal},
+        {label:'Tasa de abandono global', value:`${tasaGlobal.toFixed(1)} %`},
+        {label:'Abandonos en 2025', value:ABAN.y2025}
+      ];
+      cards.forEach(c=>{
+        const el = document.createElement('div');
+        el.className = 'stat-card';
+        el.innerHTML = `
+          <div class="stat-label">${c.label}</div>
+          <div class="stat-value">${typeof c.value === 'number' ? fmt(c.value) : c.value}</div>
+        `;
+        box.appendChild(el);
+      });
+
+      const chip = document.createElement('div');
+      chip.className = 'stat-chip';
+      const diff = ABAN.y2025 - ABAN.y2020;
+      const sign = diff >= 0 ? '+' : '';
+      chip.textContent = `Δ Abandonos 2025 vs 2020: ${sign}${fmt(diff)}`;
+      box.appendChild(chip);
+    }
+
+    function calcChartHeight(labels){
+      const perBar = 24, padding = 120;
+      return Math.max(320, perBar * labels.length + padding);
+    }
+
+    function sortRegionsForChart(){
+      const copy = [...regionsAll];
+      copy.sort((a,b)=>b.Total - a.Total);
+      // asegurar LIMA CENTRO arriba si existe
+      const idxLC = copy.findIndex(r=>r.DIRIS === 'LIMA CENTRO');
+      if(idxLC > 0){
+        const [lc] = copy.splice(idxLC,1);
+        copy.unshift(lc);
+      }
+      return copy;
+    }
+
+    function drawMainChart(){
+      const list = sortRegionsForChart();
+      const labels = list.map(r=>r.DIRIS);
+      const values = list.map(r=>r.Total);
+
+      const canvas = document.getElementById('mainChart');
+      const preferHorizontal = (chartType === 'horizontalBar');
+      const indexAxis = preferHorizontal ? 'y' : (chartType==='line'?'x':'x');
+      canvas.height = preferHorizontal ? calcChartHeight(labels) : 380;
+
+      if(mainChart) mainChart.destroy();
+
+      const bg = labels.map(l=>{
+        if(l === 'LIMA CENTRO') {
+          return pal.main; // prioritaria
+        }
+        if(l.startsWith('LIMA') || l === 'CALLAO') {
+          return shadeColor(pal.main, -8);
+        }
+        return shadeColor(pal.main, -18);
+      });
+      const border = bg.map(()=> pal.dark);
+
+      mainChart = new Chart(canvas.getContext('2d'), {
+        type: chartType === 'line' ? 'line' : 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label:'Total abandonos 2020–2025',
+            data: values,
+            backgroundColor: chartType === 'line' ? 'transparent' : bg,
+            borderColor: chartType === 'line' ? pal.main : border,
+            borderWidth: 1,
+            borderRadius: chartType === 'line' ? 0 : 8,
+            barPercentage: 0.7,
+            categoryPercentage: 0.8,
+            tension: 0.35,
+            fill: false
+          }]
+        },
+        options: {
+          indexAxis,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              backgroundColor:'#fff',
+              titleColor:pal.dark,
+              bodyColor:pal.dark,
+              borderColor:pal.main,
+              borderWidth:1,
+              padding:10,
+              boxPadding:6
+            },
+            valueLabels:{}
+          },
+          scales:{
+            x:{
+              grid:{ color: pal.grid },
+              ticks:{ color: pal.dark, autoSkip:false, maxRotation:0 }
+            },
+            y:{
+              beginAtZero:true,
+              grid:{ color: pal.grid },
+              ticks:{ color: pal.dark, autoSkip:false }
+            }
+          },
+          onClick:(evt, elements)=>{
+            if(elements.length>0){
+              const idx = elements[0].index;
+              const diris = labels[idx];
+              selectedDiris = diris;
+              renderDetail();
+              highlightRowInTable(diris);
+            }
+          }
+        },
+        plugins:[valueLabelsPlugin]
+      });
+
+      document.getElementById('mainTitle').textContent =
+        'Abandonos acumulados 2020–2025 por DIRIS';
+    }
+
+    function renderDetail(){
+      const box = document.getElementById('detailBox');
+      if(!selectedDiris){
+        box.innerHTML = 'Selecciona una barra del gráfico para ver la distribución por año (2020–2025).';
+        return;
+      }
+      const reg = regionsAll.find(r=>r.DIRIS === selectedDiris);
+      if(!reg){
+        box.innerHTML = 'Sin datos para la DIRIS seleccionada.';
+        return;
+      }
+      const total = reg.Total || 0;
+      const years = ['y2020','y2021','y2022','y2023','y2024','y2025'];
+      const labels = ['2020','2021','2022','2023','2024','2025'];
+      const p = (v)=> total ? (v/total*100).toFixed(1) : '0.0';
+      let lis = '';
+      years.forEach((k,i)=>{
+        const v = reg[k] || 0;
+        lis += `<li>${labels[i]}: ${fmt(v)} abandonos (${p(v)}%)</li>`;
+      });
+      box.innerHTML = `
+        <div style="margin-bottom:6px;"><strong>${reg.DIRIS}</strong> · Total 2020–2025: <strong>${fmt(total)}</strong></div>
+        <div class="text-muted">Desglose por año:</div>
+        <ul style="margin:6px 0 0 18px;padding:0;font-size:13px;">
+          ${lis}
+        </ul>
+      `;
+    }
+
+    function renderTable(){
+      const tbody = document.querySelector('#regionTable tbody');
+      tbody.innerHTML = '';
+      regionsAll.forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.dataset.diris = r.DIRIS;
+        tr.innerHTML = `
+          <td>${r.DIRIS}</td>
+          <td>${fmt(r.y2020)}</td>
+          <td>${fmt(r.y2021)}</td>
+          <td>${fmt(r.y2022)}</td>
+          <td>${fmt(r.y2023)}</td>
+          <td>${fmt(r.y2024)}</td>
+          <td>${fmt(r.y2025)}</td>
+          <td>${fmt(r.Total)}</td>
+        `;
+        tr.addEventListener('click', ()=>{
+          selectedDiris = r.DIRIS;
+          renderDetail();
+          highlightRowInTable(r.DIRIS);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function highlightRowInTable(diris){
+      const rows = document.querySelectorAll('#regionTable tbody tr');
+      rows.forEach(tr=>{
+        if(tr.dataset.diris === diris) tr.classList.add('highlight');
+        else tr.classList.remove('highlight');
+      });
+    }
+
+    function drawTrendChart(){
+      const canvas = document.getElementById('trendChart');
+      if(trendChart) trendChart.destroy();
+
+      const labels = ['2020','2021','2022','2023','2024','2025'];
+      const tarData = [TAR.y2020,TAR.y2021,TAR.y2022,TAR.y2023,TAR.y2024,TAR.y2025];
+      const abanData = [ABAN.y2020,ABAN.y2021,ABAN.y2022,ABAN.y2023,ABAN.y2024,ABAN.y2025];
+
+      trendChart = new Chart(canvas.getContext('2d'), {
+        type:'line',
+        data:{
+          labels,
+          datasets:[
+            {
+              label:'PVV iniciaron TAR',
+              data:tarData,
+              borderColor:shadeColor(pal.main,-10),
+              backgroundColor:'transparent',
+              tension:0.35,
+              borderWidth:1.5
+            },
+            {
+              label:'PVV abandonaron',
+              data:abanData,
+              borderColor:pal.main,
+              backgroundColor:'transparent',
+              tension:0.35,
+              borderWidth:2
+            }
+          ]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{
+            legend:{
+              display:true,
+              labels:{ color:pal.dark }
+            },
+            tooltip:{
+              backgroundColor:'#fff',
+              titleColor:pal.dark,
+              bodyColor:pal.dark,
+              borderColor:pal.main,
+              borderWidth:1,
+              padding:10
+            }
+          },
+          scales:{
+            x:{
+              grid:{ color: pal.grid },
+              ticks:{ color: pal.dark }
+            },
+            y:{
+              beginAtZero:true,
+              grid:{ color: pal.grid },
+              ticks:{ color: pal.dark }
+            }
+          }
+        }
+      });
+    }
+
+    document.getElementById('chartType').addEventListener('change', (e)=>{
+      chartType = e.target.value;
+      drawMainChart();
+      if(selectedDiris) highlightRowInTable(selectedDiris);
+    });
+
+    function init(){
+      buildSummary();
+      renderTable();
+      drawMainChart();
+      drawTrendChart();
+      renderDetail();
+    }
+    init();
+  </script>
+</body>
+</html>

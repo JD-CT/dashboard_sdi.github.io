@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MINSA · Coinfección TB-VIH · Hoja TD</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Exportar a PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+          integrity="sha512-BNa5lGqCqkW2C9JbN7u5lQxY0J4xA1lA9sLwJk+eHnW5S9o2mDqQ4k1d2k7nJk0tG1XH9k3Z8a8a7kz0GJ+8WQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+          integrity="sha512-/FqI4F7Y6R1L5Z9b8P0KzXkHx0bZpV3X9j1RTQ3h1G7M1Qw7/3d9b3s1g1LMQF3pTgQq2Q5TQ2/8r2yJbEw3xA=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <style>
+    :root{
+      --minsa-cyan:#26abd3;
+      --minsa-cyan-dark:#1a7a99;
+      --minsa-bg-light:#D4E9F0;
+      --white:#ffffff;
+      --muted:#6b7b80;
+      --radius:10px;
+      --shadow:0 8px 22px rgba(10,30,40,0.04);
+      --grid:rgba(20,40,50,0.04);
+    }
+    html,body{
+      margin:0;
+      height:100%;
+      font-family:Inter,"Segoe UI",Roboto,system-ui,-apple-system,"Helvetica Neue",Arial;
+      font-size:16px;
+      color:var(--minsa-cyan-dark);
+      background:linear-gradient(180deg,#f7fbfc,#fff);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    .topbar{
+      height:64px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:0 20px;
+      color:var(--white);
+      background:linear-gradient(90deg,var(--minsa-cyan) 0%, #3dbde6 100%);
+      box-shadow:0 2px 6px rgba(38,171,211,.15);
+    }
+    .brand{
+      font-weight:700;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+
+    .wrap{
+      display:flex;
+      gap:18px;
+      padding:18px;
+      height:calc(100vh - 64px);
+      box-sizing:border-box;
+    }
+
+    .sidebar{
+      width:300px;
+      min-width:240px;
+      padding:14px;
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(212,233,240,.96), rgba(212,233,240,.88));
+      box-shadow:0 6px 18px rgba(10,30,40,.04);
+      overflow:auto;
+    }
+    .section-title{
+      font-weight:700;
+      margin:4px 0 10px 0;
+      font-size:15px;
+    }
+
+    .stat-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:8px;
+      margin-bottom:14px;
+    }
+    .stat-card{
+      padding:10px 12px;
+      border-radius:8px;
+      background:rgba(255,255,255,0.9);
+      box-shadow:0 3px 10px rgba(10,30,40,0.04);
+    }
+    .stat-label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:2px;
+    }
+    .stat-value{
+      font-size:18px;
+      font-weight:700;
+      color:var(--minsa-cyan-dark);
+    }
+    .stat-chip{
+      font-size:12px;
+      display:inline-block;
+      margin-top:4px;
+      padding:2px 8px;
+      border-radius:999px;
+      background:var(--minsa-bg-light);
+      color:var(--minsa-cyan-dark);
+    }
+
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      overflow:hidden;
+    }
+    .row{
+      display:flex;
+      gap:16px;
+      align-items:stretch;
+    }
+
+    .card{
+      background:rgba(255,255,255,0.88);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+      flex:1;
+      min-height:120px;
+      box-sizing:border-box;
+    }
+    .chart-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .card h3{
+      margin:0;
+      font-size:18px;
+    }
+    .details{
+      padding:10px !important;
+      font-size:13px;
+    }
+
+    .btn{
+      background:var(--minsa-cyan);
+      color:var(--white);
+      border:none;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13px;
+      transition:all .2s;
+    }
+    .btn:hover{
+      background:#1a9bc4;
+      box-shadow:0 4px 12px rgba(38,171,211,.25);
+    }
+    .btn-secondary{
+      background:#fff;
+      color:#3b5560;
+      border:1px solid #e6eef1;
+    }
+    .btn-secondary.active{
+      background:var(--minsa-cyan);
+      color:#fff;
+      border-color:var(--minsa-cyan);
+    }
+
+    .text-muted{color:var(--muted);}
+
+    .pill-group{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .table-scroll{
+      max-height:260px;
+      overflow:auto;
+      border-top:1px solid #edf3f6;
+      margin-top:8px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    th,td{
+      padding:6px 6px;
+      text-align:right;
+      border-bottom:1px solid #edf3f6;
+      white-space:nowrap;
+    }
+    th:first-child, td:first-child{text-align:left;}
+    tr.highlight{
+      background:linear-gradient(90deg, rgba(38,171,211,0.08), rgba(38,171,211,0.02));
+      border-left:4px solid var(--minsa-cyan);
+    }
+
+    @media (max-width:1000px){
+      .wrap{flex-direction:column;padding:12px;height:auto;}
+      .sidebar{width:100%;order:2}
+      .main{order:1}
+      .row{flex-direction:column;}
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Dashboard Coinfección TB-VIH (Hoja TD)</div>
+    <div style="flex:1"></div>
+    <div style="opacity:.95;font-size:14px">SDI 2023–2025</div>
+  </div>
+
+  <div class="wrap">
+    <aside class="sidebar">
+      <div class="section-title">Resumen nacional 2023–2025</div>
+      <div class="stat-grid" id="summaryCards"></div>
+
+      <div class="section-title">Ayuda de lectura</div>
+      <div class="text-muted" style="font-size:13px;line-height:1.45;">
+        • El gráfico principal muestra los casos de coinfección TB‑VIH por región para <strong>2025 (Total anual)</strong>.<br>
+        • Haz clic en una barra para ver el detalle por trimestre.<br>
+        • Puedes cambiar entre barras horizontales, verticales o línea.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="row">
+        <section class="card" style="flex:2.2;">
+          <div class="chart-title">
+            <h3 id="mainTitle">Coinfección TB‑VIH por región · Total 2025</h3>
+            <div class="pill-group">
+              <select id="chartType" class="btn-secondary" style="padding:6px 8px;border-radius:8px;">
+                <option value="horizontalBar">Barras horizontales</option>
+                <option value="bar">Barras verticales</option>
+                <option value="line">Línea</option>
+              </select>
+              <button class="btn" id="exportPdfBtn"></button>
+            </div>
+          </div>
+          <div id="chartBox" style="position:relative;">
+            <canvas id="mainChart"></canvas>
+          </div>
+        </section>
+
+        <section class="card details" style="flex:1;">
+          <h4 style="margin:0 0 6px 0;font-size:15px">Detalle por región seleccionada</h4>
+          <div id="detailBox" class="text-muted">
+            Selecciona una barra del gráfico para ver la distribución por trimestre 2025.
+          </div>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="chart-title">
+          <h3 style="margin:0">Distribución por trimestre 2025 (todas las regiones)</h3>
+        </div>
+        <div class="table-scroll">
+          <table id="regionTable">
+            <thead>
+              <tr>
+                <th>Región</th>
+                <th>2023</th>
+                <th>2024</th>
+                <th>T1‑2025</th>
+                <th>T2‑2025</th>
+                <th>T3‑2025</th>
+                <th>T4‑2025</th>
+                <th>Total 2025</th>
+                <th>Total gral.</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    /* === Datos procesados desde INFORMACION DE COINFECCION TB_VIH.xlsx (Hoja TD) === */
+    const TB_DATA = {
+      regions: [
+        {"region":"Total general","total_2023":1092,"total_2024":1679,"t1_2025":596,"t2_2025":651,"t3_2025":425,"t4_2025":112,"total_2025":1784,"total_general":4555},
+        {"region":"LIMA NORTE","total_2023":359,"total_2024":484,"t1_2025":169,"t2_2025":175,"t3_2025":60,"t4_2025":19,"total_2025":423,"total_general":1266},
+        {"region":"LIMA CENTRO","total_2023":104,"total_2024":174,"t1_2025":66,"t2_2025":66,"t3_2025":69,"t4_2025":10,"total_2025":211,"total_general":489},
+        {"region":"LIMA","total_2023":193,"total_2024":126,"t1_2025":78,"t2_2025":63,"t3_2025":31,"t4_2025":7,"total_2025":179,"total_general":498},
+        {"region":"LIMA ESTE","total_2023":53,"total_2024":60,"t1_2025":43,"t2_2025":39,"t3_2025":33,"t4_2025":11,"total_2025":126,"total_general":239},
+        {"region":"LORETO","total_2023":29,"total_2024":70,"t1_2025":28,"t2_2025":45,"t3_2025":35,"t4_2025":9,"total_2025":117,"total_general":216},
+        {"region":"LIMA SUR","total_2023":81,"total_2024":82,"t1_2025":29,"t2_2025":31,"t3_2025":24,"t4_2025":10,"total_2025":94,"total_general":257},
+        {"region":"CALLAO","total_2023":44,"total_2024":96,"t1_2025":36,"t2_2025":33,"t3_2025":16,"t4_2025":5,"total_2025":90,"total_general":230},
+        {"region":"PIURA","total_2023":15,"total_2024":34,"t1_2025":14,"t2_2025":32,"t3_2025":14,"t4_2025":0,"total_2025":60,"total_general":109},
+        {"region":"CUSCO","total_2023":25,"total_2024":81,"t1_2025":11,"t2_2025":22,"t3_2025":17,"t4_2025":4,"total_2025":54,"total_general":160},
+        {"region":"LA LIBERTAD","total_2023":16,"total_2024":72,"t1_2025":12,"t2_2025":16,"t3_2025":19,"t4_2025":3,"total_2025":50,"total_general":138},
+        {"region":"JUNIN","total_2023":4,"total_2024":16,"t1_2025":19,"t2_2025":9,"t3_2025":16,"t4_2025":1,"total_2025":45,"total_general":65},
+        {"region":"LAMBAYEQUE","total_2023":22,"total_2024":75,"t1_2025":10,"t2_2025":19,"t3_2025":7,"t4_2025":3,"total_2025":39,"total_general":136},
+        {"region":"UCAYALI","total_2023":16,"total_2024":52,"t1_2025":14,"t2_2025":11,"t3_2025":9,"t4_2025":2,"total_2025":36,"total_general":104},
+        {"region":"ICA","total_2023":7,"total_2024":8,"t1_2025":6,"t2_2025":9,"t3_2025":9,"t4_2025":11,"total_2025":35,"total_general":50},
+        {"region":"PUNO","total_2023":36,"total_2024":49,"t1_2025":8,"t2_2025":18,"t3_2025":8,"t4_2025":0,"total_2025":34,"total_general":119},
+        {"region":"TACNA","total_2023":16,"total_2024":17,"t1_2025":10,"t2_2025":8,"t3_2025":7,"t4_2025":5,"total_2025":30,"total_general":63},
+        {"region":"TUMBES","total_2023":6,"total_2024":20,"t1_2025":10,"t2_2025":7,"t3_2025":7,"t4_2025":4,"total_2025":28,"total_general":54},
+        {"region":"SAN MARTIN","total_2023":30,"total_2024":42,"t1_2025":5,"t2_2025":7,"t3_2025":10,"t4_2025":4,"total_2025":26,"total_general":98},
+        {"region":"AYACUCHO","total_2023":7,"total_2024":33,"t1_2025":4,"t2_2025":10,"t3_2025":10,"t4_2025":0,"total_2025":24,"total_general":64},
+        {"region":"MADRE DE DIOS","total_2023":9,"total_2024":15,"t1_2025":2,"t2_2025":9,"t3_2025":10,"t4_2025":1,"total_2025":22,"total_general":46},
+        {"region":"CAJAMARCA","total_2023":7,"total_2024":30,"t1_2025":6,"t2_2025":4,"t3_2025":2,"t4_2025":1,"total_2025":13,"total_general":50},
+        {"region":"AMAZONAS","total_2023":2,"total_2024":9,"t1_2025":4,"t2_2025":2,"t3_2025":4,"t4_2025":0,"total_2025":10,"total_general":21},
+        {"region":"APURIMAC","total_2023":0,"total_2024":2,"t1_2025":1,"t2_2025":4,"t3_2025":2,"t4_2025":0,"total_2025":7,"total_general":9},
+        {"region":"HUANCAVELICA","total_2023":0,"total_2024":1,"t1_2025":2,"t2_2025":5,"t3_2025":0,"t4_2025":0,"total_2025":7,"total_general":8},
+        {"region":"ANCASH","total_2023":5,"total_2024":10,"t1_2025":1,"t2_2025":2,"t3_2025":2,"t4_2025":1,"total_2025":6,"total_general":21},
+        {"region":"AREQUIPA","total_2023":3,"total_2024":5,"t1_2025":3,"t2_2025":2,"t3_2025":1,"t4_2025":0,"total_2025":6,"total_general":14},
+        {"region":"HUANUCO","total_2023":1,"total_2024":7,"t1_2025":4,"t2_2025":0,"t3_2025":0,"t4_2025":1,"total_2025":5,"total_general":13},
+        {"region":"PASCO","total_2023":1,"total_2024":7,"t1_2025":0,"t2_2025":3,"t3_2025":2,"t4_2025":0,"total_2025":5,"total_general":13},
+        {"region":"MOQUEGUA","total_2023":1,"total_2024":2,"t1_2025":1,"t2_2025":0,"t3_2025":1,"t4_2025":0,"total_2025":2,"total_general":5}
+      ]
+    };
+
+    const pal = { main:'#26abd3', dark:'#1a7a99', grid:'rgba(20,40,50,0.04)' };
+
+    function shadeColor(hex, percent) {
+      const f = parseInt(hex.slice(1),16), t = percent<0?0:255, p=Math.abs(percent)/100;
+      const R = Math.round((t-(f>>16))*p)+(f>>16);
+      const G = Math.round((t-((f>>8)&255))*p)+((f>>8)&255);
+      const B = Math.round((t-(f&255))*p)+(f&255);
+      return "#"+(0x10000+(R<<16)+(G<<8)+B).toString(16).slice(1);
+    }
+    function fmt(n){ return n.toLocaleString('es-PE'); }
+
+    const allRows = TB_DATA.regions;
+    const nationalRow = allRows.find(r=>r.region === 'Total general');
+    const regions = allRows.filter(r=>r.region !== 'Total general');
+
+    let chartType = 'horizontalBar';
+    let mainChart = null;
+    let selectedRegionName = null;
+
+    // Plugin: etiquetas siempre fuera de las barras
+    const valueLabelsPlugin = {
+      id:'valueLabels',
+      afterDatasetsDraw(chart){
+        const {ctx} = chart;
+        const indexAxis = chart.options.indexAxis || 'x';
+        const ds = chart.data.datasets[0];
+        const meta = chart.getDatasetMeta(0);
+        ctx.save();
+        ctx.font = 'bold 11px Inter, Arial';
+        ctx.fillStyle = pal.dark;
+
+        meta.data.forEach((bar,i)=>{
+          const val = ds.data[i];
+          if(val == null) return;
+          const p = bar.getProps(['x','y','base','width','height'], true);
+          const text = String(val);
+          if(indexAxis === 'y'){ // horizontal
+            const x1 = Math.max(p.base, p.x);
+            const y = p.y;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, x1 + 8, y);
+          }else{ // vertical
+            const yTop = Math.min(p.base, p.y);
+            const x = p.x;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(text, x, yTop - 4);
+          }
+        });
+        ctx.restore();
+      }
+    };
+
+    function buildSummary(){
+      const box = document.getElementById('summaryCards');
+      box.innerHTML = '';
+      const s = nationalRow || {total_2023:0,total_2024:0,total_2025:0,total_general:0};
+      const cards = [
+        {label:'Total general (2023–2025)', value:s.total_general},
+        {label:'Total 2023', value:s.total_2023},
+        {label:'Total 2024', value:s.total_2024},
+        {label:'Total 2025', value:s.total_2025}
+      ];
+      cards.forEach(c=>{
+        const el = document.createElement('div');
+        el.className = 'stat-card';
+        el.innerHTML = `
+          <div class="stat-label">${c.label}</div>
+          <div class="stat-value">${fmt(c.value)}</div>
+        `;
+        box.appendChild(el);
+      });
+      // chip de variación 2025 vs 2023
+      const diff = s.total_2025 - s.total_2023;
+      const perc = s.total_2023 ? (diff / s.total_2023 * 100) : 0;
+      const chip = document.createElement('div');
+      chip.className = 'stat-chip';
+      chip.textContent = `Δ 2025 vs 2023: ${diff>=0?'+':''}${fmt(diff)} (${perc.toFixed(1)}%)`;
+      box.appendChild(chip);
+    }
+
+    function calcChartHeight(labels){
+      const perBar = 24, padding = 120;
+      return Math.max(320, perBar * labels.length + padding);
+    }
+
+    function drawMainChart(){
+      const labels = regions.map(r=>r.region);
+      const values = regions.map(r=>r.total_2025);
+
+      const canvas = document.getElementById('mainChart');
+      const preferHorizontal = (chartType === 'horizontalBar');
+      const indexAxis = preferHorizontal ? 'y' : (chartType==='line'?'x':'x');
+      canvas.height = preferHorizontal ? calcChartHeight(labels) : 380;
+
+      if(mainChart) mainChart.destroy();
+
+      const bg = labels.map(l=>{
+        // resaltar LIMA* y CALLAO
+        if(l.startsWith('LIMA') || l === 'CALLAO') return pal.main;
+        return shadeColor(pal.main,-10);
+      });
+      const border = bg.map(()=> pal.dark);
+
+      mainChart = new Chart(canvas.getContext('2d'), {
+        type: chartType === 'line' ? 'line' : 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label:'Total 2025',
+            data: values,
+            backgroundColor: chartType === 'line' ? 'transparent' : bg,
+            borderColor: chartType === 'line' ? pal.main : border,
+            borderWidth: 1,
+            borderRadius: chartType === 'line' ? 0 : 8,
+            barPercentage: 0.7,
+            categoryPercentage: 0.8,
+            tension: 0.35,
+            fill: false
+          }]
+        },
+        options: {
+          indexAxis,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              backgroundColor:'#fff',
+              titleColor:pal.dark,
+              bodyColor:pal.dark,
+              borderColor:pal.main,
+              borderWidth:1,
+              padding:10,
+              boxPadding:6
+            },
+            valueLabels:{}
+          },
+          scales:{
+            x:{
+              grid:{ color: pal.grid },
+              ticks:{ color: pal.dark, autoSkip:false, maxRotation:0 }
+            },
+            y:{
+              beginAtZero:true,
+              grid:{ color: pal.grid },
+              ticks:{ color: pal.dark, autoSkip:false }
+            }
+          },
+          onClick:(evt, elements)=>{
+            if(elements.length>0){
+              const idx = elements[0].index;
+              selectedRegionName = labels[idx];
+              renderDetail();
+              highlightRowInTable(selectedRegionName);
+            }
+          }
+        },
+        plugins:[valueLabelsPlugin]
+      });
+
+      document.getElementById('mainTitle').textContent =
+        'Coinfección TB‑VIH por región · Total 2025';
+    }
+
+    function renderDetail(){
+      const box = document.getElementById('detailBox');
+      if(!selectedRegionName){
+        box.innerHTML = 'Selecciona una barra del gráfico para ver la distribución por trimestre 2025.';
+        return;
+      }
+      const reg = regions.find(r=>r.region === selectedRegionName);
+      if(!reg){
+        box.innerHTML = 'Sin datos para la región seleccionada.';
+        return;
+      }
+      const total = reg.total_2025 || 0;
+      const p = (v)=> total ? (v/total*100).toFixed(1) : '0.0';
+      box.innerHTML = `
+        <div style="margin-bottom:6px;"><strong>${reg.region}</strong> · Total 2025: <strong>${fmt(total)}</strong></div>
+        <div class="text-muted">Desglose por trimestre 2025:</div>
+        <ul style="margin:6px 0 0 18px;padding:0;font-size:13px;">
+          <li>T1: ${fmt(reg.t1_2025)} casos (${p(reg.t1_2025)}%)</li>
+          <li>T2: ${fmt(reg.t2_2025)} casos (${p(reg.t2_2025)}%)</li>
+          <li>T3: ${fmt(reg.t3_2025)} casos (${p(reg.t3_2025)}%)</li>
+          <li>T4: ${fmt(reg.t4_2025)} casos (${p(reg.t4_2025)}%)</li>
+        </ul>
+      `;
+    }
+
+    function renderTable(){
+      const tbody = document.querySelector('#regionTable tbody');
+      tbody.innerHTML = '';
+      regions.forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.dataset.region = r.region;
+        tr.innerHTML = `
+          <td>${r.region}</td>
+          <td>${fmt(r.total_2023)}</td>
+          <td>${fmt(r.total_2024)}</td>
+          <td>${fmt(r.t1_2025)}</td>
+          <td>${fmt(r.t2_2025)}</td>
+          <td>${fmt(r.t3_2025)}</td>
+          <td>${fmt(r.t4_2025)}</td>
+          <td>${fmt(r.total_2025)}</td>
+          <td>${fmt(r.total_general)}</td>
+        `;
+        tr.addEventListener('click', ()=>{
+          selectedRegionName = r.region;
+          renderDetail();
+          highlightRowInTable(r.region);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function highlightRowInTable(regionName){
+      const rows = document.querySelectorAll('#regionTable tbody tr');
+      rows.forEach(tr=>{
+        if(tr.dataset.region === regionName) tr.classList.add('highlight');
+        else tr.classList.remove('highlight');
+      });
+    }
+
+    // Cambio de tipo de gráfico
+    document.getElementById('chartType').addEventListener('change', (e)=>{
+      chartType = e.target.value;
+      drawMainChart();
+      if(selectedRegionName) highlightRowInTable(selectedRegionName);
+    });
+
+    // Exportar a PDF
+    async function exportToPDF(){
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation:'landscape',
+        unit:'mm',
+        format:'a4'
+      });
+
+      const title = 'Coinfección TB‑VIH por región · Total 2025 (Hoja TD)';
+      pdf.setFontSize(15);
+      pdf.text(title, 14, 16);
+
+      const node = document.getElementById('chartBox');
+      const canvas = await html2canvas(node, {
+        scale:3,
+        backgroundColor:'#ffffff'
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const marginX = 14;
+      const marginTop = 22;
+      const imgWidth = pageWidth - marginX*2;
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', marginX, marginTop, imgWidth, imgHeight);
+      pdf.save('dashboard_tb_vih_hoja_TD_2025.pdf');
+    }
+    document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
+
+    function init(){
+      buildSummary();
+      renderTable();
+      drawMainChart();
+      renderDetail();
+    }
+    init();
+  </script>
+</body>
+</html>
