@@ -5,251 +5,158 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Menú Principal · Solicitud de informes</title>
 
-  <!-- Fuente sugerida -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-  <!-- Chart.js para configuración global (si algún dashboard usa Chart.js) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* =======================
-       Guía de estilo "MINSA Cyan"
-       ======================= */
     :root{
-      /* Colores */
-      --minsa-primary: #26abd3;
-      --minsa-primary-dark: #1a7a99;
-      --minsa-primary-light: #D4E9F0;
-      --white: #ffffff;
-      --muted: #6b7b80;
-      --grid: rgba(20,40,50,0.04);
-
-      /* Tipografía y escala */
-      --font-family: "Inter", "Segoe UI", Roboto, system-ui, Arial, sans-serif;
-      --size-xs: 12px;
-      --size-sm: 14px;
-      --size-md: 16px;
-      --size-lg: 18px;
-      --size-xl: 24px;
-
-      /* Espaciado / radio / sombra */
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 12px;
-      --space-lg: 16px;
-      --space-xl: 24px;
-      --radius-global: 10px;
-      --soft-shadow: 0 8px 22px rgba(10,30,40,0.04);
+      --minsa-primary:#26abd3; --minsa-primary-dark:#1a7a99; --minsa-primary-light:#D4E9F0;
+      --white:#fff; --muted:#6b7b80; --grid:rgba(20,40,50,0.04);
+      --font-family:"Inter", "Segoe UI", Roboto, system-ui, Arial, sans-serif;
+      --radius-global:10px; --soft-shadow:0 8px 22px rgba(10,30,40,0.04);
     }
-
-    /* Reset + base */
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:var(--font-family);font-size:var(--size-md);color:var(--minsa-primary-dark);
-      -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-      background:linear-gradient(180deg,#f7fbfc,#fff);
-    }
-
-    /* Topbar */
-    .topbar{
-      height:64px;
-      display:flex;
-      align-items:center;
-      gap:16px;
-      padding:0 var(--space-lg);
-      color:var(--white);
-      background:linear-gradient(90deg,var(--minsa-primary) 0%, #3dbde6 100%);
-      box-shadow:0 2px 6px rgba(38,171,211,.12);
-      position:sticky;top:0;z-index:40;
-    }
-    .brand{font-weight:700;font-size:var(--size-lg);}
-
-    /* Layout */
-    .container{padding:var(--space-lg);display:flex;gap:18px;min-height:calc(100vh - 64px);}
-    .left{width:380px;min-width:260px;}
-    .content{flex:1;display:flex;flex-direction:column;gap:16px;}
-
-    /* Sidebar (glass) */
-    .panel{
-      background:linear-gradient(180deg, rgba(212,233,240,0.95), rgba(212,233,240,0.85));
-      padding:16px;border-radius:var(--radius-global);box-shadow:var(--soft-shadow);
-    }
-    .panel h4{margin:4px 0 12px 0;font-size:var(--size-md);}
-
-    /* Grid de botones (estilo de la imagen) */
-    .menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
-    .menu-btn{
-      display:flex;align-items:center;justify-content:center;
-      height:56px;background:rgba(255,255,255,0.90);
-      border-radius:10px;box-shadow:var(--soft-shadow);
-      cursor:pointer;border:1px solid rgba(0,0,0,0.04);
-      transition:transform .12s ease, box-shadow .12s ease;
-      font-weight:600;color:var(--minsa-primary-dark);
-      text-align:center;padding:0 10px;
-    }
-    .menu-btn:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(10,30,40,0.06);}
-    .menu-btn.primary{
-      background:linear-gradient(180deg,var(--minsa-primary), #1aa0c6);
-      color:var(--white);border:1px solid rgba(255,255,255,0.06);
-    }
-
-    /* Área donde cargamos el dashboard */
-    .viewer{
-      height:720px;border-radius:var(--radius-global);overflow:hidden;border:1px solid rgba(0,0,0,0.04);
-      background:linear-gradient(180deg, rgba(255,255,255,0.92), rgba(245,250,252,0.9));
-      box-shadow:var(--soft-shadow);
-    }
-    .viewer iframe{width:100%;height:100%;border:0;background:#fff}
-
-    /* Badges y estados */
-    .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--white);color:var(--minsa-primary-dark);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.04);font-size:13px}
+    html,body{height:100%;margin:0;font-family:var(--font-family);background:linear-gradient(180deg,#f7fbfc,#fff);color:var(--minsa-primary-dark)}
+    .topbar{height:64px;display:flex;align-items:center;padding:0 16px;background:linear-gradient(90deg,var(--minsa-primary),#3dbde6);color:#fff;box-shadow:0 2px 6px rgba(38,171,211,.12)}
+    .brand{font-weight:700}
+    .container{display:flex;gap:18px;padding:16px;min-height:calc(100vh - 64px)}
+    .left{width:360px}
+    .content{flex:1;display:flex;flex-direction:column;gap:16px}
+    .panel{background:linear-gradient(180deg, rgba(212,233,240,.95), rgba(212,233,240,.85));padding:14px;border-radius:var(--radius-global);box-shadow:var(--soft-shadow)}
+    .menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .menu-btn{display:flex;align-items:center;justify-content:center;height:56px;background:rgba(255,255,255,.95);border-radius:10px;cursor:pointer;border:1px solid rgba(0,0,0,.04);font-weight:600;transition:all .12s}
+    .menu-btn:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(10,30,40,.06)}
+    .menu-btn.primary{background:linear-gradient(180deg,var(--minsa-primary), #1aa0c6);color:#fff}
+    .menu-btn.active{outline:3px solid rgba(38,171,211,.12)}
+    .viewer{height:720px;border-radius:var(--radius-global);overflow:hidden;border:1px solid rgba(0,0,0,.04);background:#fff;box-shadow:var(--soft-shadow)}
+    .viewer iframe{width:100%;height:100%;border:0}
     .muted{color:var(--muted);font-size:13px}
-
-    /* Responsive */
-    @media (max-width:980px){
-      .container{flex-direction:column;padding:12px;}
-      .left{width:100%}
-      .menu-grid{grid-template-columns:repeat(3,1fr)}
-      .viewer{height:520px}
-    }
+    .controls{display:flex;gap:10px;align-items:center}
+    @media (max-width:980px){.container{flex-direction:column}.menu-grid{grid-template-columns:repeat(3,1fr)}.viewer{height:520px}}
   </style>
 </head>
 <body>
   <div class="topbar">
     <div class="brand">MENÚ PRINCIPAL</div>
     <div style="flex:1"></div>
-    <div class="badge">Solicitud de información</div>
+    <div style="background:#fff;color:var(--minsa-primary-dark);padding:6px 10px;border-radius:999px;font-weight:700">Solicitud de información</div>
   </div>
 
   <div class="container">
     <aside class="left">
       <div class="panel">
-        <h4>VIH - TAR</h4>
-        <div class="menu-grid" style="margin-bottom:12px">
-          <div class="menu-btn">Resumen general de PVV</div>
-          <div class="menu-btn">Esquemas de tratamiento observados</div>
-          <div id="btn-dashboard" class="menu-btn primary" title="Abrir Dashboard MINSA">Analisis de esquemas</div>
-          <div class="menu-btn">Registros pendientes de actualización</div>
-          <div class="menu-btn">Indicador 10 - TPTB</div>
-          <div class="menu-btn">Revisión de registros IO</div>
-          <div class="menu-btn">PVV según nacionalidad</div>
-        </div>
-
-        <div class="muted">Guía de estilo “MINSA Cyan” aplicada: colores, tipografía, cards y botones.</div>
+        <h4 style="margin:0 0 10px 0">VIH - TAR</h4>
+        <div id="menuGrid" class="menu-grid"></div>
+        <div class="muted" style="margin-top:12px">Guía de estilo “MINSA Cyan” aplicada: colores, tipografía, cards y botones.</div>
       </div>
     </aside>
 
     <main class="content">
       <section class="panel viewer" id="viewer">
-        <!-- El iframe cargará el dashboard cuando el usuario pulse el botón -->
         <iframe id="dashboardFrame" src="" title="Vista del dashboard"></iframe>
       </section>
 
-      <section class="panel" style="display:flex;gap:14px;align-items:center;justify-content:space-between;">
+      <section class="panel" style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <strong></strong>
-          <div class="muted" style="margin-top:6px"><code style="color:var(--minsa-primary)"></code> · <code></code></div>
+          <strong id="currentLabel">Ningún informe cargado</strong>
+          <div class="muted" style="margin-top:6px" id="currentPath"></div>
         </div>
-        <div>
-          <button id="openInNew" class="menu-btn" style="width:150px;height:44px">Abrir en nueva pestaña</button>
+        <div class="controls">
+          <button id="openInNew" class="menu-btn" style="height:40px">Abrir en nueva pestaña</button>
         </div>
       </section>
     </main>
   </div>
 
   <script>
-    /* =======================
-       Comportamiento: carga del dashboard en iframe
-       ======================= */
-    const btnDash = document.getElementById('btn-dashboard');
+    /* ===========================
+       Lista de páginas (añade aquí)
+       Cada objeto:
+         - id: identificador único (sin espacios)
+         - label: texto del botón
+         - file: ruta relativa al archivo HTML
+         - primary (opt): true para estilo destacado
+         - newTab (opt): true si debe abrir por defecto en nueva pestaña
+         - default (opt): true si quieres que se cargue al abrir index
+       ============================ */
+    const PAGES = [
+      {id:'resumen_pvv', label:'Analisis de esquemas', file:'Analisis de esquemas.html'},
+      {id:'esquemas_observados', label:'Esquemas de tratamiento observados', file:'esquemas_observados.html'},
+      {id:'analisis_esquemas', label:'Analisis de esquemas', file:'dashboard_minsa_institucional_datos_excel_v3.html', primary:true, default:true},
+      {id:'reg_pendientes', label:'Registros pendientes de actualización', file:'registros_pendientes.html'},
+      {id:'indicador_tptb', label:'Indicador 10 - TPTB', file:'indicador_tptb.html'},
+      {id:'revision_io', label:'Revisión de registros IO', file:'revision_io.html'},
+      {id:'pvv_por_nacionalidad', label:'PVV según nacionalidad', file:'pvv_nacionalidad.html'}
+    ];
+
+    const menuGrid = document.getElementById('menuGrid');
     const iframe = document.getElementById('dashboardFrame');
     const openInNew = document.getElementById('openInNew');
+    const currentLabel = document.getElementById('currentLabel');
+    const currentPath = document.getElementById('currentPath');
 
-    // Ruta relativa al archivo que subiste; deben estar en la misma carpeta
-    const DASH_PATH = 'Analisis de esquemas.html';
+    let currentPageId = null;
 
-    // Estado visual
-    btnDash.addEventListener('click', () => {
-      // Cargar dentro del viewer
-      iframe.src = DASH_PATH;
-      // marcar como activo visualmente
-      document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active'));
-      btnDash.classList.add('active');
-    });
+    // Genera botones a partir del array PAGES
+    function buildMenu(){
+      menuGrid.innerHTML = '';
+      PAGES.forEach(p=>{
+        const btn = document.createElement('div');
+        btn.className = 'menu-btn' + (p.primary ? ' primary' : '');
+        btn.textContent = p.label;
+        btn.dataset.file = p.file;
+        btn.dataset.id = p.id;
+        if(p.newTab) btn.dataset.newtab = '1';
+        btn.addEventListener('click', ()=> loadPage(p.id));
+        menuGrid.appendChild(btn);
+      });
+    }
 
-    // Abrir en nueva pestaña
-    openInNew.addEventListener('click', () => {
-      window.open(DASH_PATH, '_blank');
-    });
-
-    // Si el usuario quiere que al abrir la página se cargue directamente:
-    // iframe.src = DASH_PATH; // descomenta si lo deseas
-
-    /* =======================
-       Configuración global de Chart.js (principios MINSA Cyan)
-       =======================
-       Esto aplica si los dashboards integrados usan Chart.js en la misma página (iframe NO hereda esta config).
-       Si deseas aplicar estos defaults dentro del dashboard (archivo independiente),
-       copia el bloque de abajo dentro del <script> del dashboard.
-       ======================= */
-
-    (function configureChartJS(){
-      if(!window.Chart) return;
-      try{
-        // colores base
-        const main = '#26abd3';
-        const dark = '#1a7a99';
-        const grid = 'rgba(20,40,50,0.04)';
-
-        // Element defaults
-        Chart.defaults.font.family = window.getComputedStyle(document.body).fontFamily || 'Inter, Arial';
-        Chart.defaults.color = dark;
-        Chart.defaults.backgroundColor = 'transparent';
-
-        // Barra redondeada por defecto
-        if(Chart.defaults.elements && Chart.defaults.elements.bar){
-          Chart.defaults.elements.bar.borderRadius = 8;
-          Chart.defaults.elements.bar.borderSkipped = false;
-          Chart.defaults.elements.bar.barPercentage = 0.70; // 70% ancho relativo
-          Chart.defaults.elements.bar.categoryPercentage = 0.8;
-        }
-
-        // Lineas
-        if(Chart.defaults.elements && Chart.defaults.elements.line){
-          Chart.defaults.elements.line.tension = 0.35;
-        }
-
-        // Tooltip claro
-        if(Chart.defaults.plugins && Chart.defaults.plugins.tooltip){
-          Chart.defaults.plugins.tooltip.backgroundColor = '#fff';
-          Chart.defaults.plugins.tooltip.titleColor = dark;
-          Chart.defaults.plugins.tooltip.bodyColor = dark;
-          Chart.defaults.plugins.tooltip.borderColor = main;
-          Chart.defaults.plugins.tooltip.borderWidth = 1;
-        }
-
-        // Axes / grids
-        Chart.defaults.scale.grid = Chart.defaults.scale.grid || {};
-        Chart.defaults.scale.grid.color = grid;
-        Chart.defaults.scales = Chart.defaults.scales || {};
-        if(Chart.defaults.scales.x){
-          Chart.defaults.scales.x.grid = Chart.defaults.scales.x.grid || {};
-          Chart.defaults.scales.x.grid.color = grid;
-          Chart.defaults.scales.x.ticks = Chart.defaults.scales.x.ticks || {};
-          Chart.defaults.scales.x.ticks.color = dark;
-        }
-        if(Chart.defaults.scales.y){
-          Chart.defaults.scales.y.grid = Chart.defaults.scales.y.grid || {};
-          Chart.defaults.scales.y.grid.color = grid;
-          Chart.defaults.scales.y.ticks = Chart.defaults.scales.y.ticks || {};
-          Chart.defaults.scales.y.ticks.color = dark;
-        }
-
-        // Nota: si usas Chart.js dentro de un iframe (como aquí), la configuración global
-        // debe aplicarse dentro del HTML del iframe (es decir, copia este bloque al dashboard).
-      }catch(e){
-        console.warn('Chart.js global config skipped', e);
+    // Carga la página en el iframe o en nueva pestaña si newTab === true
+    function loadPage(id){
+      const page = PAGES.find(x=>x.id===id);
+      if(!page) return;
+      // actualizar UI active
+      document.querySelectorAll('.menu-btn').forEach(b=>b.classList.toggle('active', b.dataset.id === id));
+      currentPageId = id;
+      currentLabel.textContent = page.label;
+      currentPath.textContent = page.file;
+      if(page.newTab){
+        window.open(page.file, '_blank');
+      }else{
+        iframe.src = page.file;
       }
-    })();
+    }
+
+    // botón "Abrir en nueva pestaña" abre la página seleccionada o la por defecto
+    openInNew.addEventListener('click', ()=>{
+      const page = PAGES.find(x=>x.id===currentPageId) || PAGES.find(x=>x.default) || PAGES[0];
+      if(page) window.open(page.file, '_blank');
+    });
+
+    // Inicialización
+    buildMenu();
+    // Cargar la default (si existe)
+    const defaultPage = PAGES.find(x=>x.default) || PAGES[0];
+    if(defaultPage) loadPage(defaultPage.id);
+
+    /* ===========================
+       Consejos para añadir una página:
+       - Crea el archivo HTML (por ejemplo: nueva_pagina.html)
+       - Añade un objeto en el array PAGES:
+         { id:'nueva_pagina', label:'Titulo botón', file:'nueva_pagina.html' }
+       - Si quieres que aparezca destacado: añade primary:true
+       - Si quieres que abra en nueva pestaña por defecto: newTab:true
+       - Si quieres que se cargue al abrir el index: default:true
+       - Si tus archivos están en subcarpeta, coloca file:'dashboards/mi_dashboard.html'
+       ============================ */
+
+    /* ===========================
+       Nota Chart.js:
+       La configuración global en este documento NO se aplica dentro del iframe.
+       Si tus dashboards usan Chart.js y quieres los mismos defaults, copia
+       el bloque de configuración Chart.js dentro del <script> de cada dashboard HTML.
+       ============================ */
   </script>
 </body>
 </html>
